@@ -1,0 +1,86 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Hermes Agent Ansible Role - Defaults
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── User configuration ───────────────────────────────────────────────────────
+
+# Create a dedicated system user for hermes (recommended for production)
+hermes_create_user: true
+
+# Username for the hermes service account
+hermes_user: hermes
+
+# User shell (set to /usr/sbin/nologin for pure service accounts)
+hermes_user_shell: /bin/bash
+
+# User comment/description
+hermes_user_comment: "Hermes Agent Service"
+
+# Home directory for the hermes user
+hermes_user_home: "/home/hermes"
+
+# Additional groups for the hermes user (e.g. video for GPU access)
+hermes_user_groups: []
+
+# Enable lingering so systemd --user services persist across logouts
+hermes_enable_linger: true
+
+# ── Mise integration ─────────────────────────────────────────────────────────
+# When true, the role checks that mise is installed and uses the mise_use
+# module from ansible-role-mise to install tools into the clone directory.
+# When false, tools (uv, python, node) must already be on the target user's PATH.
+#
+# Requires: ansible-role-mise library must be in module search path.
+# Add to ansible.cfg: [defaults] library = /path/to/ansible-role-mise/library
+
+hermes_use_mise: false
+
+# Path to the mise executable (absolute path or command name resolved via PATH)
+hermes_mise_executable: mise
+
+# ── Installation paths (all relative to hermes_user_home) ────────────────────
+
+# Base directory under the user's home
+hermes_home_rel: ".hermes"
+
+# Code checkout directory (relative to hermes_home)
+hermes_repo_rel: "hermes-agent"
+
+# ── Tool versions ────────────────────────────────────────────────────────────
+# Only used when hermes_use_mise is true — passed to mise for installation.
+
+hermes_python_version: "3.11"
+hermes_node_version: "26"
+hermes_uv_version: "latest"
+
+# ── Git configuration ────────────────────────────────────────────────────────
+
+# Pinned release tag — avoids pulling 'main' which may be ahead of stable
+hermes_branch: "main"
+hermes_release_tag: "v2026.8.19"
+hermes_commit: ""
+hermes_repo_url: "https://github.com/NousResearch/hermes-agent.git"
+
+# ── Install options ──────────────────────────────────────────────────────────
+
+hermes_use_venv: true
+hermes_skip_browser: false       # Skip Playwright/Chromium
+hermes_skip_computer_use: false  # Skip cua-driver
+hermes_no_skills: false          # Skip bundled skills seeding
+hermes_non_interactive: true     # Always true for Ansible
+
+# ── System packages (installed via apt/dnf/pacman only when root) ────────────
+
+hermes_install_build_tools: true
+hermes_install_ffmpeg: true
+hermes_install_playwright_deps: true  # Install Chromium system deps (needs root)
+
+# ── Systemd gateway service ─────────────────────────────────────────────────
+
+hermes_install_gateway: true     # Install systemd user service for gateway
+hermes_gateway_autostart: true   # Enable service at boot
+
+# ── Timeouts ─────────────────────────────────────────────────────────────────
+
+hermes_node_deps_timeout: 600

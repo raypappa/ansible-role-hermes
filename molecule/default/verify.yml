@@ -1,0 +1,68 @@
+---
+- name: Verify hermes role
+  hosts: all
+  become: true
+  tasks:
+    - name: Check hermes user exists
+      ansible.builtin.getent:
+        database: passwd
+        key: hermes
+
+    - name: Check hermes home directory
+      ansible.builtin.stat:
+        path: /home/hermes
+      register: _hermes_home_stat
+
+    - name: Assert hermes home exists
+      ansible.builtin.assert:
+        that:
+          - _hermes_home_stat.stat.exists
+          - _hermes_home_stat.stat.isdir
+        fail_msg: "hermes home directory not found"
+
+    - name: Check hermes agent directory
+      ansible.builtin.stat:
+        path: /home/hermes/.hermes/hermes-agent
+      register: _hermes_agent_stat
+
+    - name: Assert hermes agent directory exists
+      ansible.builtin.assert:
+        that:
+          - _hermes_agent_stat.stat.exists
+          - _hermes_agent_stat.stat.isdir
+        fail_msg: "hermes agent directory not found"
+
+    - name: Check hermes launcher
+      ansible.builtin.stat:
+        path: /home/hermes/.local/bin/hermes
+      register: _hermes_launcher_stat
+
+    - name: Assert hermes launcher exists
+      ansible.builtin.assert:
+        that:
+          - _hermes_launcher_stat.stat.exists
+          - _hermes_launcher_stat.stat.executable
+        fail_msg: "hermes launcher not found or not executable"
+
+    - name: Check venv directory
+      ansible.builtin.stat:
+        path: /home/hermes/.hermes/hermes-agent/venv
+      register: _hermes_venv_stat
+
+    - name: Assert venv exists
+      ansible.builtin.assert:
+        that:
+          - _hermes_venv_stat.stat.exists
+          - _hermes_venv_stat.stat.isdir
+        fail_msg: "venv directory not found"
+
+    - name: Check python in venv
+      ansible.builtin.stat:
+        path: /home/hermes/.hermes/hermes-agent/venv/bin/python
+      register: _hermes_python_stat
+
+    - name: Assert python exists in venv
+      ansible.builtin.assert:
+        that:
+          - _hermes_python_stat.stat.exists
+        fail_msg: "python not found in venv"

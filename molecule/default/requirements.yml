@@ -1,0 +1,4 @@
+---
+# Galaxy dependencies.
+roles:
+  - name: raypappa.mise

@@ -1,0 +1,131 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Install and configure the Hermes Gateway systemd service
+# Runs as root — installs a system-level service that runs as the hermes user
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Check if systemd is available
+  ansible.builtin.stat:
+    path: /run/systemd/system
+  register: _hermes_systemd
+  failed_when: false
+
+- name: Create systemd service directory
+  ansible.builtin.file:
+    path: /etc/systemd/system
+    state: directory
+    mode: "0755"
+  when:
+    - _hermes_systemd.stat.exists | default(false) | bool
+    - hermes_install_gateway | bool
+
+- name: Write hermes-gateway systemd unit (mise)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/hermes-gateway.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Hermes Agent Gateway
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User={{ hermes_user }}
+      Group={{ hermes_user }}
+      WorkingDirectory={{ _hermes_home }}
+      Environment=HOME={{ _hermes_user_home }}
+      Environment=HERMES_HOME={{ _hermes_home }}
+      Environment=PATH=/usr/local/bin:/usr/bin:/bin
+      ExecStart={{ _hermes_mise_bin }} exec -- python {{ _hermes_install_dir }}/hermes gateway run
+      Restart=on-failure
+      RestartSec=10
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=hermes-gateway
+
+      # Hardening
+      NoNewPrivileges=true
+      ProtectSystem=strict
+      ProtectHome=read-only
+      PrivateTmp=true
+      PrivateDevices=true
+      ProtectKernelTunables=true
+      ProtectKernelModules=true
+      ProtectControlGroups=true
+      RestrictSUIDSGID=true
+      RestrictNamespaces=true
+      LockPersonality=true
+      MemoryDenyWriteExecute=false
+      ReadWritePaths={{ _hermes_home }}
+
+      [Install]
+      WantedBy=multi-user.target
+  when:
+    - _hermes_systemd.stat.exists | default(false) | bool
+    - hermes_install_gateway | bool
+    - hermes_use_mise | bool
+
+- name: Write hermes-gateway systemd unit (system)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/hermes-gateway.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Hermes Agent Gateway
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User={{ hermes_user }}
+      Group={{ hermes_user }}
+      WorkingDirectory={{ _hermes_home }}
+      Environment=HOME={{ _hermes_user_home }}
+      Environment=HERMES_HOME={{ _hermes_home }}
+      Environment=PATH=/usr/local/bin:/usr/bin:/bin
+      ExecStart={{ _hermes_venv }}/bin/python {{ _hermes_install_dir }}/hermes gateway run
+      Restart=on-failure
+      RestartSec=10
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=hermes-gateway
+
+      # Hardening
+      NoNewPrivileges=true
+      ProtectSystem=strict
+      ProtectHome=read-only
+      PrivateTmp=true
+      PrivateDevices=true
+      ProtectKernelTunables=true
+      ProtectKernelModules=true
+      ProtectControlGroups=true
+      RestrictSUIDSGID=true
+      RestrictNamespaces=true
+      LockPersonality=true
+      MemoryDenyWriteExecute=false
+      ReadWritePaths={{ _hermes_home }}
+
+      [Install]
+      WantedBy=multi-user.target
+  when:
+    - _hermes_systemd.stat.exists | default(false) | bool
+    - hermes_install_gateway | bool
+    - not (hermes_use_mise | bool)
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when:
+    - _hermes_systemd.stat.exists | default(false) | bool
+    - hermes_install_gateway | bool
+
+- name: Enable hermes-gateway service
+  ansible.builtin.systemd:
+    name: hermes-gateway
+    enabled: "{{ hermes_gateway_autostart | bool }}"
+    state: started
+  when:
+    - _hermes_systemd.stat.exists | default(false) | bool
+    - hermes_install_gateway | bool
+  failed_when: false

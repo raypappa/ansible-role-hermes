@@ -1,0 +1,50 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Computed variables — do not override these directly.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# OS detection
+_hermes_is_linux: "{{ ansible_system == 'Linux' }}"
+_hermes_is_macos: "{{ ansible_system == 'Darwin' }}"
+_hermes_is_windows: "{{ ansible_os_family == 'Windows' }}"
+_hermes_is_root: "{{ (ansible_user_id | default('root')) == 'root' or ((ansible_effective_user_id | default(0)) | int) == 0 }}"
+
+# Distro (Linux only)
+_hermes_distro: "{{ ansible_distribution | default('') | lower }}"
+
+# Effective user home — when running as root to provision a service user,
+# use the target user's home, not /root
+_hermes_user_home: >-
+  {{ hermes_user_home if (hermes_create_user | bool)
+     else ansible_env.HOME if not (_hermes_is_root | bool)
+     else '/home/' + hermes_user }}
+
+# Resolved paths
+_hermes_home: "{{ _hermes_user_home }}/{{ hermes_home_rel }}"
+_hermes_install_dir: "{{ _hermes_home }}/{{ hermes_repo_rel }}"
+
+# Effective user for mise — the user mise installs tools for
+_hermes_mise_user: >-
+  {{ hermes_user if (hermes_create_user | bool) else ansible_user_id }}
+
+# mise binary (overridable via hermes_mise_executable; resolved from PATH by default)
+_hermes_mise_bin: "{{ hermes_mise_executable }}"
+
+# mise exec prefix — empty when mise is disabled, "mise exec --" when enabled
+_hermes_mise_exec: "{{ _hermes_mise_bin + ' exec --' if (hermes_use_mise | bool) else '' }}"
+
+# Full uv invocation — via mise when enabled, else absolute path to installed binary
+_hermes_uv_cmd: >-
+  {{ (_hermes_mise_exec + ' uv') if (hermes_use_mise | bool)
+     else (_hermes_user_home + '/.local/bin/uv') }}
+
+# venv path
+_hermes_venv: "{{ _hermes_install_dir }}/venv"
+
+# Shell profile for PATH setup
+_hermes_shell_profile: "{{ _hermes_user_home + '/.bashrc' }}"
+
+# Playwright deps flag — skip when not root and not explicitly requested
+_hermes_install_playwright_deps: >-
+  {{ hermes_install_playwright_deps | bool and
+     (_hermes_is_root | bool or not hermes_create_user | bool) }}

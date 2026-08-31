@@ -1,0 +1,7 @@
+---
+# Handlers for the hermes role
+
+- name: Remove existing venv
+  ansible.builtin.file:
+    path: "{{ _hermes_venv }}"
+    state: absent

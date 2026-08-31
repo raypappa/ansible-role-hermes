@@ -1,0 +1,41 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Check mise and install tools via mise_use module
+# Installs tools into the clone directory for local isolation
+# Requires ansible-role-mise library (mise_use module) in module search path
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Check mise is available
+  ansible.builtin.command:
+    cmd: "{{ _hermes_mise_bin }} --version"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  register: _hermes_mise_version
+  changed_when: false
+  failed_when: false
+
+- name: Fail if mise is required but not found
+  ansible.builtin.fail:
+    msg: >-
+      hermes_use_mise is enabled but mise was not found on the user's PATH.
+      Install mise first or disable hermes_use_mise.
+      See: https://mise.jdx.dev/getting-started.html
+  when: _hermes_mise_version.rc != 0
+
+- name: Display mise version info
+  ansible.builtin.debug:
+    msg: "Using mise {{ _hermes_mise_version.stdout }} for tool management"
+
+- name: Install tools via mise_use
+  mise_use:
+    name:
+      - "python@{{ hermes_python_version }}"
+      - "node@{{ hermes_node_version }}"
+      - "uv@{{ hermes_uv_version }}"
+      - ffmpeg
+      - ripgrep
+    path: "{{ _hermes_install_dir }}"
+    executable: "{{ _hermes_mise_bin }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  register: _hermes_mise_tools

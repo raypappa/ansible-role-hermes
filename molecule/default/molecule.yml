@@ -1,0 +1,61 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: docker
+
+platforms:
+  - name: ubuntu-noble
+    image: ubuntu:noble
+    pre_build_image: true
+    command: sleep infinity
+    privileged: false
+
+  - name: debian-bookworm
+    image: debian:bookworm
+    pre_build_image: true
+    command: sleep infinity
+    privileged: false
+
+  - name: fedora-latest
+    image: fedora:latest
+    pre_build_image: true
+    command: sleep infinity
+    privileged: false
+
+provisioner:
+  name: ansible
+  become: true
+  become_method: sudo
+  config_options:
+    defaults:
+      callbacks_enabled: timer
+      # mise_use module lives in the Galaxy-installed mise role
+      library: ~/.ansible/roles/raypappa.mise/library
+  inventory:
+    host_vars:
+      ubuntu-noble:
+        ansible_python_interpreter: /usr/bin/python3
+      debian-bookworm:
+        ansible_python_interpreter: /usr/bin/python3
+      fedora-latest:
+        ansible_python_interpreter: /usr/bin/python3
+
+scenario:
+  name: default
+  # idempotence omitted: tool tasks shell out (uv/npm/mise) and cannot
+  # report reliable change detection across reruns
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - cleanup
+    - destroy

@@ -1,0 +1,12 @@
+[settings]
+experimental = true
+auto_install = true
+lockfile = true
+minimum_release_age = "3d"
+pin = true
+
+[settings.pipx]
+uvx = true
+
+[tools]
+"pipx:molecule" = { version = "26.6.0", uvx_args = "--with=molecule-plugins[docker],ansible-lint" }

@@ -1,0 +1,42 @@
+---
+galaxy_info:
+  role_name: hermes
+  namespace: raypappa
+  author: Nous Research
+  description: >-
+    Install Hermes Agent with optional mise for isolated tool management.
+    Creates a dedicated system user, installs Python/Node.js/uv via mise,
+    and configures the hermes command launcher.
+  license: MIT
+  min_ansible_version: "2.12"
+  company: Nous Research
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Fedora
+      versions:
+        - "38"
+        - "39"
+        - "40"
+  galaxy_tags:
+    - ai
+    - agent
+    - hermes
+    - llm
+    - nousresearch
+    - mise
+    - python
+    - nodejs
+
+dependencies: []

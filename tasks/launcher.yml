@@ -1,0 +1,121 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Create launcher scripts and configure PATH
+# When mise is enabled, tools are invoked via `mise exec --` for dynamic
+# version resolution. When disabled, tools are called directly.
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: "{{ _hermes_user_home }}/.local/bin"
+    state: directory
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+
+- name: Create hermes launcher (mise)
+  ansible.builtin.copy:
+    dest: "{{ _hermes_user_home }}/.local/bin/hermes"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      unset PYTHONPATH
+      unset PYTHONHOME
+      exec {{ _hermes_mise_bin }} exec -- python "{{ _hermes_install_dir }}/hermes" "$@"
+  when: hermes_use_mise | bool
+
+- name: Create hermes launcher (system)
+  ansible.builtin.copy:
+    dest: "{{ _hermes_user_home }}/.local/bin/hermes"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      unset PYTHONPATH
+      unset PYTHONHOME
+      exec "{{ _hermes_venv }}/bin/python" "{{ _hermes_install_dir }}/hermes" "$@"
+  when: not (hermes_use_mise | bool)
+
+- name: Create hermes-agent launcher (mise)
+  ansible.builtin.copy:
+    dest: "{{ _hermes_user_home }}/.local/bin/hermes-agent"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      unset PYTHONPATH
+      unset PYTHONHOME
+      exec {{ _hermes_mise_bin }} exec -- python "{{ _hermes_install_dir }}/run_agent.py" "$@"
+  when: hermes_use_mise | bool
+
+- name: Create hermes-agent launcher (system)
+  ansible.builtin.copy:
+    dest: "{{ _hermes_user_home }}/.local/bin/hermes-agent"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      unset PYTHONPATH
+      unset PYTHONHOME
+      exec "{{ _hermes_venv }}/bin/python" "{{ _hermes_install_dir }}/run_agent.py" "$@"
+  when: not (hermes_use_mise | bool)
+
+- name: Create hermes-acp launcher (mise)
+  ansible.builtin.copy:
+    dest: "{{ _hermes_user_home }}/.local/bin/hermes-acp"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      unset PYTHONPATH
+      unset PYTHONHOME
+      exec {{ _hermes_mise_bin }} exec -- python "{{ _hermes_install_dir }}/hermes" acp "$@"
+  when: hermes_use_mise | bool
+
+- name: Create hermes-acp launcher (system)
+  ansible.builtin.copy:
+    dest: "{{ _hermes_user_home }}/.local/bin/hermes-acp"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      unset PYTHONPATH
+      unset PYTHONHOME
+      exec "{{ _hermes_venv }}/bin/python" "{{ _hermes_install_dir }}/hermes" acp "$@"
+  when: not (hermes_use_mise | bool)
+
+- name: Ensure ~/.local/bin is in PATH
+  ansible.builtin.lineinfile:
+    path: "{{ _hermes_shell_profile }}"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    create: true
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+
+- name: Set HERMES_HOME environment variable
+  ansible.builtin.lineinfile:
+    path: "{{ _hermes_shell_profile }}"
+    line: 'export HERMES_HOME="{{ _hermes_home }}"'
+    create: true
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+
+- name: Symlink hermes into /usr/local/bin (when root provisioning for service)
+  ansible.builtin.file:
+    src: "{{ _hermes_user_home }}/.local/bin/hermes"
+    dest: /usr/local/bin/hermes
+    state: link
+    force: true
+  become: true
+  when:
+    - hermes_create_user | bool
+    - _hermes_is_root | bool

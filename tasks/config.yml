@@ -1,0 +1,107 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Configuration: .env, config.yaml, SOUL.md, skills
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Create hermes data subdirectories
+  ansible.builtin.file:
+    path: "{{ _hermes_home }}/{{ item }}"
+    state: directory
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0755"
+  loop:
+    - cron
+    - sessions
+    - logs
+    - pairing
+    - hooks
+    - image_cache
+    - audio_cache
+    - memories
+    - skills
+
+- name: Copy .env template
+  ansible.builtin.copy:
+    src: "{{ _hermes_install_dir }}/.env.example"
+    dest: "{{ _hermes_home }}/.env"
+    remote_src: true
+    force: false
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0600"
+
+- name: Copy config.yaml template
+  ansible.builtin.copy:
+    src: "{{ _hermes_install_dir }}/cli-config.yaml.example"
+    dest: "{{ _hermes_home }}/config.yaml"
+    remote_src: true
+    force: false
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+
+- name: Write default SOUL.md
+  ansible.builtin.copy:
+    dest: "{{ _hermes_home }}/SOUL.md"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+    force: false
+    content: >-
+      You are Hermes Agent, an intelligent AI assistant created by Nous Research.
+
+      You are helpful, harmless, and honest. You should aim to be thorough
+      and precise in your responses while maintaining a friendly and
+      approachable tone.
+
+      You have access to various tools including web search, file operations,
+      and code execution. Use them when appropriate to help the user.
+
+- name: Seed bundled skills
+  ansible.builtin.command:
+    cmd: "{{ _hermes_venv }}/bin/python {{ _hermes_install_dir }}/tools/skills_sync.py"
+    chdir: "{{ _hermes_install_dir }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  register: _hermes_skills_sync
+  changed_when: true
+  failed_when: false
+  when: not (hermes_no_skills | bool)
+
+- name: Fallback copy skills manually
+  ansible.builtin.command:
+    cmd: "cp -r {{ _hermes_install_dir }}/skills/* {{ _hermes_home }}/skills/"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  when:
+    - not (hermes_no_skills | bool)
+    - _hermes_skills_sync is failed
+  changed_when: true
+
+- name: Create .no-bundled-skills marker
+  ansible.builtin.file:
+    path: "{{ _hermes_home }}/.no-bundled-skills"
+    state: touch
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+  when: hermes_no_skills | bool
+
+- name: Write bootstrap marker
+  ansible.builtin.copy:
+    dest: "{{ _hermes_install_dir }}/.hermes-bootstrap-complete"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+    content: >-
+      {"schemaVersion":1,"pinnedBranch":"{{ hermes_branch }}","completedAt":"{{ ansible_date_time.iso8601 }}","installMethod":"ansible","toolManager":"mise"}
+
+- name: Write install method marker
+  ansible.builtin.copy:
+    dest: "{{ _hermes_install_dir }}/.install_method"
+    owner: "{{ _hermes_mise_user }}"
+    group: "{{ _hermes_mise_user }}"
+    mode: "0644"
+    content: |
+      ansible-mise

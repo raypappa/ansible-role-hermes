@@ -1,0 +1,53 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Create a dedicated system user for Hermes
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Check if hermes user exists
+  ansible.builtin.command:
+    cmd: "id -u {{ hermes_user }}"
+  register: _hermes_user_check
+  changed_when: false
+  failed_when: false
+
+- name: Create hermes system user
+  ansible.builtin.user:
+    name: "{{ hermes_user }}"
+    shell: "{{ hermes_user_shell }}"
+    comment: "{{ hermes_user_comment }}"
+    home: "{{ hermes_user_home }}"
+    create_home: true
+    system: true
+    state: present
+  when: _hermes_user_check.rc != 0
+
+- name: Add hermes user to additional groups
+  ansible.builtin.user:
+    name: "{{ hermes_user }}"
+    groups: "{{ hermes_user_groups | join(',') }}"
+    append: true
+  when: hermes_user_groups | length > 0
+
+- name: Enable lingering for hermes user (systemd)
+  ansible.builtin.command: "loginctl enable-linger {{ hermes_user }}"
+  when:
+    - hermes_enable_linger | bool
+    - ansible_service_mgr | default('') == 'systemd'
+  changed_when: true
+  failed_when: false
+
+- name: Create hermes home directory structure
+  ansible.builtin.file:
+    path: "{{ _hermes_home }}"
+    state: directory
+    owner: "{{ hermes_user }}"
+    group: "{{ hermes_user }}"
+    mode: "0755"
+
+- name: Create mise config directory
+  ansible.builtin.file:
+    path: "{{ _hermes_user_home }}/.config/mise"
+    state: directory
+    owner: "{{ hermes_user }}"
+    group: "{{ hermes_user }}"
+    mode: "0755"

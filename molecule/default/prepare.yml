@@ -1,0 +1,33 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Detect OS family
+      ansible.builtin.raw: cat /etc/os-release
+      register: os_release
+      changed_when: false
+
+    - name: Install sudo, python3, curl, git (Debian/Ubuntu)
+      ansible.builtin.raw: apt-get update && apt-get install -y sudo python3 curl git
+      when: "'ID=debian' in os_release.stdout or 'ID=ubuntu' in os_release.stdout"
+
+    - name: Install sudo, python3, curl, git (Fedora)
+      ansible.builtin.raw: dnf install -y sudo python3 curl git
+      when: "'ID=fedora' in os_release.stdout"
+
+    - name: Download mise installer
+      ansible.builtin.get_url:
+        url: https://mise.run
+        dest: /tmp/mise-install.sh
+        mode: "0755"
+
+    # mise is NOT installed by the role itself; provide it system-wide so
+    # both converge plays (mise on/off) can exercise their code paths
+    - name: Install mise to /usr/local/bin
+      ansible.builtin.command:
+        cmd: /tmp/mise-install.sh
+      environment:
+        MISE_INSTALL_PATH: /usr/local/bin/mise
+      args:
+        creates: /usr/local/bin/mise

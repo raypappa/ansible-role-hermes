@@ -1,0 +1,24 @@
+---
+- name: Converge - hermes role without mise
+  hosts: all
+  become: true
+  vars:
+    hermes_use_mise: false
+    hermes_create_user: true
+    hermes_user: hermes
+    hermes_install_gateway: false
+    hermes_skip_browser: true
+  roles:
+    - role: raypappa.hermes
+
+- name: Converge - hermes role with mise
+  hosts: all
+  become: true
+  vars:
+    hermes_use_mise: true
+    hermes_create_user: true
+    hermes_user: hermes
+    hermes_install_gateway: false
+    hermes_skip_browser: true
+  roles:
+    - role: raypappa.hermes

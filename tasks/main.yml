@@ -1,0 +1,47 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Main entry point for the hermes role
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Create hermes system user
+  ansible.builtin.include_tasks: user.yml
+  when: hermes_create_user | bool
+  tags: hermes_user
+
+- name: Check mise is available (when use_mise enabled)
+  ansible.builtin.include_tasks: mise_check.yml
+  when: hermes_use_mise | bool
+  tags: hermes_mise
+
+- name: Install system prerequisites (root only)
+  ansible.builtin.include_tasks: prerequisites.yml
+  when: _hermes_is_root | bool
+  tags: hermes_prerequisites
+
+- name: Clone or update repository
+  ansible.builtin.include_tasks: clone.yml
+  tags: hermes_clone
+
+- name: Create venv and install Python dependencies
+  ansible.builtin.include_tasks: venv.yml
+  when: hermes_use_venv | bool
+  tags: hermes_venv
+
+- name: Install Node.js dependencies
+  ansible.builtin.include_tasks: node_deps.yml
+  tags: hermes_node_deps
+
+- name: Create launcher scripts and configure PATH
+  ansible.builtin.include_tasks: launcher.yml
+  tags: hermes_launcher
+
+- name: Copy configuration templates and seed skills
+  ansible.builtin.include_tasks: config.yml
+  tags: hermes_config
+
+- name: Install gateway systemd service (root only)
+  ansible.builtin.include_tasks: gateway.yml
+  when:
+    - _hermes_is_root | bool
+    - hermes_install_gateway | bool
+  tags: hermes_gateway

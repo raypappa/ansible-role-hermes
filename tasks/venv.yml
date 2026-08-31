@@ -1,0 +1,68 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Create Python virtual environment and install dependencies
+# Uses `{{ _hermes_mise_exec }} uv` — resolves to mise exec -- uv or just uv
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Download uv installer (no mise)
+  ansible.builtin.get_url:
+    url: https://astral.sh/uv/install.sh
+    dest: /tmp/hermes-install-uv.sh
+    mode: "0755"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  when: not (hermes_use_mise | bool)
+
+- name: Install uv to ~/.local/bin (no mise)
+  ansible.builtin.command:
+    cmd: /tmp/hermes-install-uv.sh
+  environment:
+    UV_NO_CONFIG: "1"
+    CARGO_HOME: "{{ _hermes_user_home }}/.cargo"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  args:
+    creates: "{{ _hermes_user_home }}/.local/bin/uv"
+  when: not (hermes_use_mise | bool)
+
+- name: Check if venv already exists
+  ansible.builtin.stat:
+    path: "{{ _hermes_venv }}/bin/python"
+  register: _hermes_venv_stat
+
+- name: Create venv with uv
+  ansible.builtin.command:
+    cmd: "{{ _hermes_uv_cmd }} venv {{ _hermes_venv }} --python {{ hermes_python_version }}"
+    chdir: "{{ _hermes_install_dir }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  environment:
+    UV_NO_CONFIG: "1"
+  register: _hermes_venv_create
+  changed_when: true
+  when: not _hermes_venv_stat.stat.exists
+
+- name: Install Python dependencies with uv sync (preferred)
+  ansible.builtin.command:
+    cmd: "{{ _hermes_uv_cmd }} sync --extra all --locked"
+    chdir: "{{ _hermes_install_dir }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  environment:
+    UV_NO_CONFIG: "1"
+    UV_PROJECT_ENVIRONMENT: "{{ _hermes_venv }}"
+  register: _hermes_uv_sync
+  changed_when: true
+  failed_when: false
+
+- name: Install Python deps with uv pip (fallback)
+  ansible.builtin.command:
+    cmd: "{{ _hermes_uv_cmd }} pip install --python {{ _hermes_venv }} -e '.[all]'"
+    chdir: "{{ _hermes_install_dir }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  environment:
+    UV_NO_CONFIG: "1"
+  when: _hermes_uv_sync.rc != 0
+  register: _hermes_uv_pip
+  changed_when: true

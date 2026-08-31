@@ -1,0 +1,40 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# Install Node.js dependencies (browser tools, TUI)
+# Uses `{{ _hermes_mise_exec }} npm/npx` — resolves to mise exec or direct call
+# ══════════════════════════════════════════════════════════════════════════════
+
+- name: Install Node.js dependencies
+  ansible.builtin.command:
+    cmd: "{{ _hermes_mise_exec }} npm install --silent"
+    chdir: "{{ _hermes_install_dir }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  register: _hermes_npm_install
+  changed_when: true
+  failed_when: false
+  timeout: "{{ hermes_node_deps_timeout }}"
+
+- name: Install TUI dependencies
+  ansible.builtin.command:
+    cmd: "{{ _hermes_mise_exec }} npm install --silent"
+    chdir: "{{ _hermes_install_dir }}/ui-tui"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  when: (_hermes_install_dir + '/ui-tui') is directory
+  register: _hermes_tui_npm
+  changed_when: true
+  failed_when: false
+  timeout: "{{ hermes_node_deps_timeout }}"
+
+- name: Install Playwright Chromium
+  ansible.builtin.command:
+    cmd: "{{ _hermes_mise_exec }} npx --yes playwright install chromium"
+    chdir: "{{ _hermes_install_dir }}"
+  become: true
+  become_user: "{{ _hermes_mise_user }}"
+  when: not (hermes_skip_browser | bool)
+  register: _hermes_playwright
+  changed_when: true
+  failed_when: false
+  timeout: 600

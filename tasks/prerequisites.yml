@@ -1,0 +1,138 @@
+---
+# ══════════════════════════════════════════════════════════════════════════════
+# System prerequisites — only runs when invoked as root
+# Installs build tools and Playwright system deps.
+# ripgrep, Python, Node.js, uv are all managed by mise — not system packages.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Build tools (for Python wheel compilation) ──────────────────────────────
+
+- name: Install build tools on Ubuntu/Debian
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - python3-dev
+      - libffi-dev
+      - curl
+      - xz-utils
+      - git
+    state: present
+    update_cache: true
+  become: true
+  when:
+    - hermes_install_build_tools | bool
+    - _hermes_distro in ['ubuntu', 'debian', 'linuxmint', 'pop']
+
+- name: Install build tools on Fedora
+  ansible.builtin.dnf:
+    name:
+      - gcc
+      - python3-devel
+      - libffi-devel
+      - curl
+      - git
+    state: present
+  become: true
+  when:
+    - hermes_install_build_tools | bool
+    - _hermes_distro in ['fedora', 'rhel', 'centos', 'rocky', 'alma']
+
+- name: Install build tools on Arch
+  community.general.pacman:
+    name:
+      - base-devel
+      - python
+      - libffi
+      - curl
+      - git
+    state: present
+  become: true
+  when:
+    - hermes_install_build_tools | bool
+    - _hermes_distro in ['arch', 'manjaro', 'endeavouros']
+
+# ── Playwright system dependencies (Chromium) ───────────────────────────────
+# These MUST be installed as root. The hermes user cannot install them.
+# Per the docs: "The only thing on the install path that genuinely needs root
+# is Playwright's --with-deps step."
+
+- name: Install Playwright system deps on Ubuntu/Debian
+  ansible.builtin.shell: |
+    set -e
+    if command -v npx >/dev/null 2>&1; then
+      npx --yes playwright install-deps chromium
+    else
+      apt-get install -y --no-install-recommends \
+        libnss3 libxss1 libasound2 libatk-bridge2.0-0 libgtk-3-0 \
+        libgbm1 libx11-xcb1 libxcb-dri3-0 libxcomposite1 libxrandr2 \
+        libxdamage1 libpango-1.0-0 libcairo2 libatspi2.0-0
+    fi
+  args:
+    creates: /var/lib/dpkg/info/libnss3:amd64.list
+  become: true
+  when:
+    - hermes_install_playwright_deps | bool
+    - _hermes_distro in ['ubuntu', 'debian', 'linuxmint', 'pop']
+  register: _hermes_pw_deps
+  changed_when: "'installed' in _hermes_pw_deps.stdout or 'installed' in _hermes_pw_deps.stderr"
+  failed_when: false
+
+- name: Install Playwright system deps on Arch
+  community.general.pacman:
+    name:
+      - nss
+      - atk
+      - at-spi2-core
+      - cups
+      - libdrm
+      - libxkbcommon
+      - mesa
+      - pango
+      - cairo
+      - alsa-lib
+    state: present
+  become: true
+  when:
+    - hermes_install_playwright_deps | bool
+    - _hermes_distro in ['arch', 'manjaro', 'endeavouros']
+
+# ── ffmpeg (system package — not managed by mise) ────────────────────────────
+
+- name: Install ffmpeg on Ubuntu/Debian
+  ansible.builtin.apt:
+    name: ffmpeg
+    state: present
+  become: true
+  when:
+    - hermes_install_ffmpeg | bool
+    - _hermes_distro in ['ubuntu', 'debian', 'linuxmint', 'pop']
+  failed_when: false
+
+- name: Install ffmpeg on Fedora
+  ansible.builtin.dnf:
+    name: ffmpeg
+    state: present
+  become: true
+  when:
+    - hermes_install_ffmpeg | bool
+    - _hermes_distro in ['fedora', 'rhel', 'centos', 'rocky', 'alma']
+  failed_when: false
+
+- name: Install ffmpeg on Arch
+  community.general.pacman:
+    name: ffmpeg
+    state: present
+  become: true
+  when:
+    - hermes_install_ffmpeg | bool
+    - _hermes_distro in ['arch', 'manjaro', 'endeavouros']
+  failed_when: false
+
+- name: Install ffmpeg on macOS via Homebrew
+  community.general.homebrew:
+    name: ffmpeg
+    state: present
+  when:
+    - hermes_install_ffmpeg | bool
+    - _hermes_is_macos | bool
+  failed_when: false
