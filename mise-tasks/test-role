@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-molecule test
+# Pin the API until the Molecule Docker plugin supports Docker Engine 1.54.
+DOCKER_API_VERSION=1.45 molecule test
