@@ -1,0 +1,18 @@
+name: Release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: UV Semantic Release
+        uses: anomius/uv-semantic-release@736f136cd8b5d8ca1dd9edfa3e923b171fc6f0e9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

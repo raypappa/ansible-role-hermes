@@ -17,6 +17,12 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-  "pre-commit>=4.3.0",
-]
+dev = ["pre-commit>=4.3.0"]
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+commit_parser = "conventional_commits"
+tag_format = "v{version}"
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
