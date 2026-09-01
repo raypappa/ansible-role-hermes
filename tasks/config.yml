@@ -95,7 +95,7 @@
     group: "{{ _hermes_mise_user }}"
     mode: "0644"
     content: >-
-      {"schemaVersion":1,"pinnedBranch":"{{ hermes_branch }}","completedAt":"{{ ansible_date_time.iso8601 }}","installMethod":"ansible","toolManager":"mise"}
+      {"schemaVersion":1,"pinnedBranch":"{{ hermes_branch }}","completedAt":"{{ ansible_facts['date_time'].iso8601 }}","installMethod":"ansible","toolManager":"mise"}
 
 - name: Write install method marker
   ansible.builtin.copy:

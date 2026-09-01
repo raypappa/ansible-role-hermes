@@ -32,7 +32,7 @@
   ansible.builtin.command: "loginctl enable-linger {{ hermes_user }}"
   when:
     - hermes_enable_linger | bool
-    - ansible_service_mgr | default('') == 'systemd'
+    - ansible_facts['service_mgr'] | default('') == 'systemd'
   changed_when: true
   failed_when: false
 

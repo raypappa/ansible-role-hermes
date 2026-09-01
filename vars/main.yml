@@ -4,19 +4,19 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 # OS detection
-_hermes_is_linux: "{{ ansible_system == 'Linux' }}"
-_hermes_is_macos: "{{ ansible_system == 'Darwin' }}"
-_hermes_is_windows: "{{ ansible_os_family == 'Windows' }}"
-_hermes_is_root: "{{ (ansible_user_id | default('root')) == 'root' or ((ansible_effective_user_id | default(0)) | int) == 0 }}"
+_hermes_is_linux: "{{ ansible_facts['system'] == 'Linux' }}"
+_hermes_is_macos: "{{ ansible_facts['system'] == 'Darwin' }}"
+_hermes_is_windows: "{{ ansible_facts['os_family'] == 'Windows' }}"
+_hermes_is_root: "{{ (ansible_facts['user_id'] | default('root')) == 'root' or ((ansible_facts['effective_user_id'] | default(0)) | int) == 0 }}"
 
 # Distro (Linux only)
-_hermes_distro: "{{ ansible_distribution | default('') | lower }}"
+_hermes_distro: "{{ ansible_facts['distribution'] | default('') | lower }}"
 
 # Effective user home — when running as root to provision a service user,
 # use the target user's home, not /root
 _hermes_user_home: >-
   {{ hermes_user_home if (hermes_create_user | bool)
-     else ansible_env.HOME if not (_hermes_is_root | bool)
+     else ansible_facts['env'].HOME if not (_hermes_is_root | bool)
      else '/home/' + hermes_user }}
 
 # Resolved paths
@@ -25,7 +25,7 @@ _hermes_install_dir: "{{ _hermes_home }}/{{ hermes_repo_rel }}"
 
 # Effective user for mise — the user mise installs tools for
 _hermes_mise_user: >-
-  {{ hermes_user if (hermes_create_user | bool) else ansible_user_id }}
+  {{ hermes_user if (hermes_create_user | bool) else ansible_facts['user_id'] }}
 
 # mise binary (overridable via hermes_mise_executable; resolved from PATH by default)
 _hermes_mise_bin: "{{ hermes_mise_executable }}"
