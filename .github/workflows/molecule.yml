@@ -1,5 +1,5 @@
 ---
-name: Linux Molecule Tests
+name: Molecule Tests
 
 on:
   push:
@@ -12,6 +12,8 @@ on:
 env:
   PY_COLORS: "1"
   ANSIBLE_FORCE_COLOR: "1"
+  PYTHONUTF8: "1"
+  DOCKER_API_VERSION: "1.45"
 
 jobs:
   lint:
@@ -19,22 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@v10.0.1
         with:
-          python-version: "3.12"
-          cache: "pip"
+          enable-cache: true
 
-      - name: Install linting tools
-        run: pip install ansible-core ansible-lint yamllint
+      - name: Install dependencies
+        run: uv sync
 
-      - name: Run yamllint
-        run: yamllint .
-
-      - name: Run ansible-lint
-        run: ansible-lint
+      - name: Run pre-commit
+        run: uv run pre-commit run --all-files
 
   molecule:
     name: "Molecule (${{ matrix.distro }})"
@@ -50,20 +48,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@v10.0.1
         with:
-          python-version: "3.12"
-          cache: "pip"
+          enable-cache: true
 
       - name: Install dependencies
-        run: |
-          pip install ansible-core molecule molecule-plugins[docker]
+        run: uv sync
 
       - name: Run Molecule on ${{ matrix.distro }}
-        run: molecule test -- --limit ${{ matrix.distro }}
+        run: uv run molecule test -- --limit ${{ matrix.distro }}
 
       - name: Upload logs on failure
         if: failure()

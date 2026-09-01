@@ -12,22 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@v10.0.1
         with:
-          python-version: "3.12"
-          cache: "pip"
+          enable-cache: true
 
-      - name: Install linting tools
-        run: pip install ansible-core ansible-lint yamllint
+      - name: Install dependencies
+        run: uv sync
 
-      - name: Run yamllint
-        run: yamllint .
-
-      - name: Run ansible-lint
-        run: ansible-lint
+      - name: Run pre-commit
+        run: uv run pre-commit run --all-files
 
   publish:
     name: Publish to Galaxy
@@ -35,22 +31,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@v10.0.1
         with:
-          python-version: "3.12"
-          cache: "pip"
+          enable-cache: true
 
-      - name: Install Ansible
-        run: pip install ansible-core
+      - name: Install dependencies
+        run: uv sync
 
       - name: Import role to Ansible Galaxy
         env:
           GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
         run: |
-          ansible-galaxy role import \
+          uv run ansible-galaxy role import \
             --api-key $GALAXY_API_KEY \
             --force \
             --role-name hermes \
