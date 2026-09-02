@@ -50,12 +50,10 @@ scenario:
   # report reliable change detection across reruns
   test_sequence:
     - dependency
-    - cleanup
     - destroy
     - syntax
     - create
     - prepare
     - converge
     - verify
-    - cleanup
     - destroy

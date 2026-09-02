@@ -1,7 +1,6 @@
 ---
 - name: Create
-  hosts: localhost
-  connection: local
+  hosts: all
   gather_facts: false
   tasks:
     - name: Create molecule instance(s)
@@ -14,6 +13,8 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: localhost
+      run_once: true
 
     - name: Start molecule instance(s)
       ansible.builtin.command:
@@ -22,3 +23,5 @@
       loop_control:
         label: "{{ item.name }}"
       changed_when: true
+      delegate_to: localhost
+      run_once: true
