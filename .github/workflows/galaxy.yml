@@ -1,11 +1,8 @@
----
 name: Publish to Ansible Galaxy
-
 on:
   push:
     tags:
-      - "v*.*.*"  # Semantic versioning tags
-
+      - "v*.*.*" # Semantic versioning tags
 jobs:
   lint:
     name: Lint
@@ -13,18 +10,14 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v7.0.1
-
       - name: Set up Python and uv
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-
       - name: Install dependencies
         run: uv sync
-
       - name: Run pre-commit
         run: uv run pre-commit run --all-files
-
   publish:
     name: Publish to Galaxy
     needs: lint
@@ -32,21 +25,18 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v7.0.1
-
       - name: Set up Python and uv
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-
       - name: Install dependencies
         run: uv sync
-
       - name: Import role to Ansible Galaxy
         env:
-          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
+          GALAXY_TOKEN: ${{ secrets.GALAXY_TOKEN }}
         run: |
           uv run ansible-galaxy role import \
-            --api-key $GALAXY_API_KEY \
+            --api-key $GALAXY_TOKEN \
             --force \
             --role-name hermes \
             ${{ github.repository }}
