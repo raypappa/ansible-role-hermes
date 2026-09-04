@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.2.2 (2026-09-04)
+
+### Bug Fixes
+
+- **ci**: Skip package build during release
+  ([`18a68cd`](https://github.com/raypappa/ansible-role-hermes/commit/18a68cdb1ea71e3cc442c2a06cb19451cdcb80c2))
+
+Disable the package build step because this repository publishes an Ansible role rather than a
+  Python package.
+
+
 ## v0.2.1 (2026-09-04)
 
 ### Bug Fixes
