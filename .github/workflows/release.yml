@@ -16,3 +16,4 @@ jobs:
         uses: anomius/uv-semantic-release@736f136cd8b5d8ca1dd9edfa3e923b171fc6f0e9
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          build: 'false'
