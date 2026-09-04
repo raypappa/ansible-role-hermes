@@ -20,8 +20,16 @@
     force: true
   become: true
   become_user: "{{ _hermes_mise_user }}"
+  environment:
+    GIT_CONFIG_COUNT: "{{ 1 if lookup('env', 'GITHUB_TOKEN') | length > 0 else 0 }}"
+    GIT_CONFIG_KEY_0: http.https://github.com/.extraheader
+    GIT_CONFIG_VALUE_0: "AUTHORIZATION: basic {{ ('x-access-token:' ~ lookup('env', 'GITHUB_TOKEN')) | b64encode }}"
   when: not _hermes_repo_stat.stat.exists
   register: _hermes_clone
+  retries: 3
+  delay: 30
+  until: _hermes_clone is succeeded
+  no_log: true
   notify: Remove existing venv
 
 # ── Checkout release tag ─────────────────────────────────────────────────────
@@ -35,7 +43,15 @@
     force: true
   become: true
   become_user: "{{ _hermes_mise_user }}"
+  environment:
+    GIT_CONFIG_COUNT: "{{ 1 if lookup('env', 'GITHUB_TOKEN') | length > 0 else 0 }}"
+    GIT_CONFIG_KEY_0: http.https://github.com/.extraheader
+    GIT_CONFIG_VALUE_0: "AUTHORIZATION: basic {{ ('x-access-token:' ~ lookup('env', 'GITHUB_TOKEN')) | b64encode }}"
   register: _hermes_tag_checkout
+  retries: 3
+  delay: 30
+  until: _hermes_tag_checkout is succeeded
+  no_log: true
   when:
     - hermes_release_tag | length > 0
     - _hermes_clone is changed or not _hermes_repo_stat.stat.exists
@@ -56,7 +72,15 @@
         force: true
       become: true
       become_user: "{{ _hermes_mise_user }}"
+      environment:
+        GIT_CONFIG_COUNT: "{{ 1 if lookup('env', 'GITHUB_TOKEN') | length > 0 else 0 }}"
+        GIT_CONFIG_KEY_0: http.https://github.com/.extraheader
+        GIT_CONFIG_VALUE_0: "AUTHORIZATION: basic {{ ('x-access-token:' ~ lookup('env', 'GITHUB_TOKEN')) | b64encode }}"
       register: _hermes_fetch
+      retries: 3
+      delay: 30
+      until: _hermes_fetch is succeeded
+      no_log: true
 
 # ── Pin to specific commit (overrides tag) ───────────────────────────────────
 
@@ -69,8 +93,16 @@
     force: true
   become: true
   become_user: "{{ _hermes_mise_user }}"
+  environment:
+    GIT_CONFIG_COUNT: "{{ 1 if lookup('env', 'GITHUB_TOKEN') | length > 0 else 0 }}"
+    GIT_CONFIG_KEY_0: http.https://github.com/.extraheader
+    GIT_CONFIG_VALUE_0: "AUTHORIZATION: basic {{ ('x-access-token:' ~ lookup('env', 'GITHUB_TOKEN')) | b64encode }}"
   when: hermes_commit | length > 0
   register: _hermes_commit_checkout
+  retries: 3
+  delay: 30
+  until: _hermes_commit_checkout is succeeded
+  no_log: true
 
 # ── Fix ownership ────────────────────────────────────────────────────────────
 
