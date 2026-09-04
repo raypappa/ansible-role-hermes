@@ -24,8 +24,9 @@ dev = [
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
-commit_parser = "conventional_commits"
+commit_parser = "angular"
 tag_format = "v{version}"
 
 [tool.semantic_release.changelog]
+[tool.semantic_release.changelog.default_templates]
 changelog_file = "CHANGELOG.md"
