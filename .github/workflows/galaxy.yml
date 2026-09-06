@@ -4,23 +4,8 @@ on:
     tags:
       - "v*.*.*" # Semantic versioning tags
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v7.0.1
-      - name: Set up Python and uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-      - name: Install dependencies
-        run: uv sync
-      - name: Run pre-commit
-        run: uv run pre-commit run --all-files
   publish:
     name: Publish to Galaxy
-    needs: lint
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -39,4 +24,5 @@ jobs:
             --api-key $GALAXY_TOKEN \
             --force \
             --role-name hermes \
-            ${{ github.repository }}
+            ${{ github.repository_owner }} \
+            ${{ github.event.repository.name }}

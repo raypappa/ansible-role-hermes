@@ -1,22 +1,17 @@
----
 name: Molecule Tests
-
 on:
   push:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 6 * * 1"  # Weekly on Monday
-
+    - cron: "0 6 * * 1" # Weekly on Monday
 permissions:
   contents: read
-
 env:
   PY_COLORS: "1"
   ANSIBLE_FORCE_COLOR: "1"
   PYTHONUTF8: "1"
   DOCKER_API_VERSION: "1.45"
-
 jobs:
   lint:
     name: Lint
@@ -24,18 +19,14 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v7.0.1
-
       - name: Set up Python and uv
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-
       - name: Install dependencies
         run: uv sync
-
       - name: Run pre-commit
         run: uv run pre-commit run --all-files
-
   molecule:
     name: "Molecule (${{ matrix.distro }})"
     needs: lint
@@ -49,22 +40,17 @@ jobs:
           - ubuntu-noble
           - debian-bookworm
           - fedora-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v7.0.1
-
       - name: Set up Python and uv
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-
       - name: Install dependencies
         run: uv sync
-
       - name: Run Molecule on ${{ matrix.distro }}
         run: uv run molecule test -- --limit ${{ matrix.distro }}
-
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v7
@@ -73,7 +59,6 @@ jobs:
           path: |
             ~/.cache/molecule/
             /tmp/molecule-*
-
   report:
     name: Test Results
     needs: molecule
@@ -87,3 +72,15 @@ jobs:
             exit 1
           fi
           echo "All Molecule tests passed"
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+      - name: UV Semantic Release
+        uses: anomius/uv-semantic-release@736f136cd8b5d8ca1dd9edfa3e923b171fc6f0e9
+        with:
+          github_token: ${{ secrets.PAT_TOKEN }}
+          build: 'false'
