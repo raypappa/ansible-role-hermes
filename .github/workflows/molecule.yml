@@ -74,6 +74,7 @@ jobs:
           echo "All Molecule tests passed"
   release:
     runs-on: ubuntu-latest
+    needs: report
     steps:
       - uses: actions/checkout@v7
         with:
