@@ -113,6 +113,9 @@ When `hermes_use_mise: true`:
 - Creates a `.mise.toml` in the installation directory with pinned tool versions
 - Launcher scripts and systemd service use `mise exec --` for dynamic tool resolution
 
+The repository is cloned before the local mise configuration is created. This ensures mise treats
+the installation directory as a project path on fresh hosts, including current mise releases.
+
 When `hermes_use_mise: false`:
 
 - No mise interaction occurs

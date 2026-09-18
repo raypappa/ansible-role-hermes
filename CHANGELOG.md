@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased
+
+### Bug Fixes
+
+- Clone the Hermes repository before installing tools with mise
+
+Ensure the local mise project directory exists before invoking `mise_use`, avoiding an
+`unknown config file type` error on fresh installations with current mise releases.
 
 ## v0.2.2 (2026-09-04)
 

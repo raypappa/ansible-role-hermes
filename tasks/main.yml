@@ -8,11 +8,6 @@
   when: hermes_create_user | bool
   tags: hermes_user
 
-- name: Check mise is available (when use_mise enabled)
-  ansible.builtin.include_tasks: mise_check.yml
-  when: hermes_use_mise | bool
-  tags: hermes_mise
-
 - name: Install system prerequisites (root only)
   ansible.builtin.include_tasks: prerequisites.yml
   when: _hermes_is_root | bool
@@ -21,6 +16,11 @@
 - name: Clone or update repository
   ansible.builtin.include_tasks: clone.yml
   tags: hermes_clone
+
+- name: Check mise is available (when use_mise enabled)
+  ansible.builtin.include_tasks: mise_check.yml
+  when: hermes_use_mise | bool
+  tags: hermes_mise
 
 - name: Create venv and install Python dependencies
   ansible.builtin.include_tasks: venv.yml
