@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.3.3 (2026-09-19)
+
+### Bug Fixes
+
+- **ci**: Publish role with current ansible-galaxy
+  ([`d69102a`](https://github.com/raypappa/ansible-role-hermes/commit/d69102a0f903e29462c828d55a1a34806613155f))
+
+### Chores
+
+- Sync lockfile version
+  ([`d2c1005`](https://github.com/raypappa/ansible-role-hermes/commit/d2c1005caee6535708d9426059e862bfb4693108))
+
+
 ## v0.3.2 (2026-09-19)
 
 ### Bug Fixes
