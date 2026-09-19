@@ -1,13 +1,53 @@
 # CHANGELOG
 
-## Unreleased
+
+## v0.3.2 (2026-09-19)
 
 ### Bug Fixes
 
-- Clone the Hermes repository before installing tools with mise
+- **ci**: Improve release workflow summary
+  ([`8306033`](https://github.com/raypappa/ansible-role-hermes/commit/8306033306196d32ac36ae43a39e65fb27e1630b))
 
-Ensure the local mise project directory exists before invoking `mise_use`, avoiding an
-`unknown config file type` error on fresh installations with current mise releases.
+- Clone Hermes before configuring mise
+  ([`98a2179`](https://github.com/raypappa/ansible-role-hermes/commit/98a21793b454d36c42dd5389cd283da6818fb9f7))
+
+Ensure the local Hermes checkout exists before mise_use receives its project path. Update Molecule
+  to exercise a fresh mise-enabled install and a second converge, and document the ordering fix.
+
+
+## v0.3.1 (2026-09-08)
+
+### Bug Fixes
+
+- Remove absolute symlink .ansible/roles/hermes
+  ([`5676601`](https://github.com/raypappa/ansible-role-hermes/commit/5676601444f3ebbf5372c226188cf305adf1d613))
+
+The tarball for 0.3.0 included .ansible/roles/hermes -> /home/stoney/workspaces/ansible-role-hermes,
+  which causes ansible-galaxy extraction to fail with 'Invalid linkname for tarfile member'. Remove
+  the tracked symlink and rely on .gitignore's .ansible entry to keep it ignored.
+
+
+## v0.3.0 (2026-09-06)
+
+### Continuous Integration
+
+- Gate release on molecule tests
+  ([`1845d14`](https://github.com/raypappa/ansible-role-hermes/commit/1845d1436eb5771c10720546c4f51d0e2047d606))
+
+- Consolidate release workflow
+  ([`b00e558`](https://github.com/raypappa/ansible-role-hermes/commit/b00e558a191c501c472964cf7d76b9f01abbefb8))
+
+
+## v0.2.3 (2026-09-04)
+
+### Bug Fixes
+
+- **ci**: Use PAT for release workflow
+  ([`66fa933`](https://github.com/raypappa/ansible-role-hermes/commit/66fa933f95687b8066dd88120cdf9aec1268f794))
+
+Use PAT_TOKEN for checkout and semantic-release so tag pushes can trigger the Galaxy publishing
+  workflow.
+
 
 ## v0.2.2 (2026-09-04)
 
