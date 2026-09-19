@@ -6,7 +6,7 @@ on:
   schedule:
     - cron: "0 6 * * 1" # Weekly on Monday
 permissions:
-  contents: read
+  contents: write
 env:
   PY_COLORS: "1"
   ANSIBLE_FORCE_COLOR: "1"
@@ -82,6 +82,14 @@ jobs:
           token: ${{ secrets.PAT_TOKEN }}
       - name: UV Semantic Release
         uses: anomius/uv-semantic-release@736f136cd8b5d8ca1dd9edfa3e923b171fc6f0e9
+        id: release
         with:
           github_token: ${{ secrets.PAT_TOKEN }}
           build: 'false'
+      - name: Release Summary
+        if: steps.release.outputs.released == 'true'
+        run: |
+          echo "## 🚀 Published to PyPI!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ steps.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
